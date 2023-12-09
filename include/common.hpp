@@ -1,11 +1,12 @@
 #pragma once
 
+#include <deque>
 #include <filesystem>
 #include <fstream>
 #include <string>
 #include <vector>
 
-std::vector<std::string> readLines(const std::filesystem::path& path)
+inline std::vector<std::string> readLines(const std::filesystem::path& path)
 {
   std::ifstream file(path);
   if (!file.is_open()) {
@@ -19,4 +20,14 @@ std::vector<std::string> readLines(const std::filesystem::path& path)
   }
 
   return result;
+}
+
+inline auto toVector(auto&& rng)
+{
+  return std::vector(rng.begin(), rng.end());
+}
+
+inline auto toDeque(auto&& rng)
+{
+  return std::deque(rng.begin(), rng.end());
 }
