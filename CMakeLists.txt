@@ -47,3 +47,6 @@ add_common_properties(day8)
 
 add_executable(day9 day9/main.cpp)
 add_common_properties(day9)
+
+add_executable(day10 day10/main.cpp)
+add_common_properties(day10)
