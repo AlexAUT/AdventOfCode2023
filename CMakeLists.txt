@@ -12,7 +12,7 @@ function(add_common_properties TARGET)
   target_compile_options(
     ${TARGET}
     PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX>
-            $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Werror>)
+            $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Werror -DGLIBCXX_DEBUG>)
 
   set_property(TARGET ${TARGET} PROPERTY CXX_STANDARD 23)
 
@@ -53,3 +53,6 @@ add_common_properties(day10)
 
 add_executable(day11 day11/main.cpp)
 add_common_properties(day11)
+
+add_executable(day12 day12/main.cpp)
+add_common_properties(day12)

@@ -22,6 +22,12 @@ inline std::vector<std::string> readLines(const std::filesystem::path& path)
   return result;
 }
 
+template<class T>
+inline T rangeTo(auto rng)
+{
+  return T(rng.begin(), rng.end());
+}
+
 inline auto toVector(auto&& rng)
 {
   return std::vector(rng.begin(), rng.end());
