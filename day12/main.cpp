@@ -20,19 +20,6 @@ constexpr char OPERATIONAL = '.';
 constexpr char DAMAGED = '#';
 // constexpr char UNKNOWN = '?';
 
-const auto compareSpansForCache = [](std::span<int> s1, std::span<int> s2) {
-  if (s1.size() < s2.size())
-    return true;
-  if (s2.size() < s1.size())
-    return false;
-
-  for (std::size_t i = 0; i < s1.size(); i++) {
-    if (s1[i] < s2[i])
-      return true;
-  }
-  return false;
-};
-
 using Cache =
     std::map<std::string_view,
              std::map<std::span<std::size_t>, std::size_t, decltype([](const std::span<std::size_t>& s1, const std::span<std::size_t>& s2) {

@@ -3,6 +3,7 @@
 #include <deque>
 #include <filesystem>
 #include <fstream>
+#include <ranges>
 #include <string>
 #include <vector>
 
@@ -37,3 +38,10 @@ inline auto toDeque(auto&& rng)
 {
   return std::deque(rng.begin(), rng.end());
 }
+
+inline std::vector<std::vector<std::string>> splitOnEmptyRows(const std::vector<std::string>& lines)
+{
+  namespace v = std::ranges::views;
+  return toVector(lines | v::split("") | v::transform([](const auto& r) { return std::vector<std::string>(r.begin(), r.end()); }));
+}
+
