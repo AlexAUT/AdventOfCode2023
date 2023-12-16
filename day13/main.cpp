@@ -17,60 +17,114 @@ namespace v = std::ranges::views;
 
 std::tuple<int, int> fiendReflections(const std::vector<std::string>& field)
 {
-  // fmt::println("Field:\n {}", fmt::join(field, "\n"));
   if (field.empty())
     throw std::runtime_error("Empty line?");
 
   std::tuple<int, int> reflectionColAndRow{0, 0};
   // Rows
-  for (std::size_t i = 0; i < field.size() - 1; i++)
-  {
-    auto& row1 = field[i];
-    auto& row2 = field[i+1];
+  for (std::size_t i = 1; i < field.size(); i++) {
+    auto leftIndices = v::iota(static_cast<std::size_t>(0), i) | v::reverse;
+    auto rightIndices = v::iota(i, field.size());
 
-    if (row1 == row2)
-    {
-      if (i != 0)
-      {
-        auto reflLen = std::min(i + 1, field.size() - i - 1);
-        auto side1 = field | v::take(i + 1) | v::reverse | v::take(reflLen);
-        auto side2 = field | v::drop(i + 1) | v::take(reflLen);
+    auto minLen = std::min(leftIndices.size(), rightIndices.size());
 
-        if (!r::equal(side1, side2))
-        {
-          continue;
-        }
-      }
-      std::get<1>(reflectionColAndRow) = static_cast<int>(i + 1);
-      return {0, i+1};
-      break;
+    auto left = leftIndices | v::take(minLen) | v::transform([&](std::size_t row) { return field[row]; });
+    auto right = rightIndices | v::take(minLen) | v::transform([&](std::size_t row) { return field[row]; });
+
+    if (!r::equal(left, right)) {
+      continue;
     }
+    std::get<1>(reflectionColAndRow) = static_cast<int>(i);
+    break;
   }
+
   // Cols
-  for (std::size_t i = 0; i < field[0].size() - 1; i++)
-  {
-    auto col = [&](std::size_t colIndex) { auto colView = field | v::transform([colIndex](const std::string& r) { return r[colIndex]; }); return std::string(colView.begin(), colView.end()); };
+  for (std::size_t i = 1; i < field[0].size(); i++) {
+    auto col = [&](std::size_t colIndex) {
+      auto colView = field | v::transform([colIndex](const std::string& r) { return r[colIndex]; });
+      return std::string(colView.begin(), colView.end());
+    };
 
-    if (r::equal(col(i), col(i+1)))
-    {
-      if (i != 0)
-      {
-        auto reflLen = std::min(i + 1, field[0].size() - i - 1);
-        auto side1 = v::iota(static_cast<std::size_t>(0), i + 1) | v::transform(col) | v::reverse | v::take(reflLen);
-        auto side2 = v::iota(i+1, field[0].size()) | v::transform(col) | v::take(reflLen);
+    auto reflLen = std::min(i, field[0].size() - i);
+    auto side1 = v::iota(static_cast<std::size_t>(0), i) | v::transform(col) | v::reverse | v::take(reflLen);
+    auto side2 = v::iota(i, field[0].size()) | v::transform(col) | v::take(reflLen);
 
-        if (!r::equal(side1, side2))
-        {
-          continue;
-        }
-      }
-      std::get<0>(reflectionColAndRow) = static_cast<int>(i + 1);
-      return {i+1, 0};
-      break;
+    if (!r::equal(side1, side2)) {
+      continue;
     }
+    std::get<0>(reflectionColAndRow) = static_cast<int>(i);
+    break;
   }
 
-  throw std::runtime_error("No reflection found?");
+  if (reflectionColAndRow == std::tuple(0, 0))
+    throw std::runtime_error("No reflection found?");
+  return reflectionColAndRow;
+}
+
+std::tuple<int, int> fiendReflectionsWithSmudges(const std::vector<std::string>& field)
+{
+  if (field.empty())
+    throw std::runtime_error("Empty line?");
+
+  std::tuple<int, int> reflectionColAndRow{0, 0};
+  // Rows
+  for (std::size_t i = 1; i < field.size(); i++) {
+    auto leftIndices = v::iota(static_cast<std::size_t>(0), i) | v::reverse;
+    auto rightIndices = v::iota(i, field.size());
+
+    auto minLen = std::min(leftIndices.size(), rightIndices.size());
+
+    auto left = leftIndices | v::take(minLen) | v::transform([&](std::size_t row) { return field[row]; });
+    auto right = rightIndices | v::take(minLen) | v::transform([&](std::size_t row) { return field[row]; });
+
+    std::size_t diffCount{};
+    r::for_each(v::zip(left, right), [&diffCount](auto leftRight) {
+      auto [left, right] = leftRight;
+      for (auto [l, r] : v::zip(left, right)) {
+        if (l != r) {
+          diffCount++;
+        }
+      }
+    });
+
+    if (diffCount != 1) {
+      continue;
+    }
+
+    std::get<1>(reflectionColAndRow) = static_cast<int>(i);
+    break;
+  }
+
+  // Cols
+  for (std::size_t i = 1; i < field[0].size(); i++) {
+    auto col = [&](std::size_t colIndex) {
+      auto colView = field | v::transform([colIndex](const std::string& r) { return r[colIndex]; });
+      return std::string(colView.begin(), colView.end());
+    };
+
+    auto reflLen = std::min(i, field[0].size() - i);
+    auto left = v::iota(static_cast<std::size_t>(0), i) | v::transform(col) | v::reverse | v::take(reflLen);
+    auto right = v::iota(i, field[0].size()) | v::transform(col) | v::take(reflLen);
+
+    std::size_t diffCount{};
+    r::for_each(v::zip(left, right), [&diffCount](auto leftRight) {
+      auto [left, right] = leftRight;
+      for (auto [l, r] : v::zip(left, right)) {
+        if (l != r) {
+          diffCount++;
+        }
+      }
+    });
+
+    if (diffCount != 1) {
+      continue;
+    }
+    std::get<0>(reflectionColAndRow) = static_cast<int>(i);
+    break;
+  }
+
+  if (reflectionColAndRow == std::tuple(0, 0))
+    throw std::runtime_error("No reflection found?");
   return reflectionColAndRow;
 }
 
@@ -80,12 +134,24 @@ int64_t task1(std::vector<std::string> input)
 
   int64_t result{};
 
-  for (auto& field : fields)
-  {
+  for (auto& field : fields) {
     auto [x, y] = fiendReflections(field);
     result += x + (100 * y);
   }
-  
+
+  return result;
+}
+
+int64_t task2(std::vector<std::string> input)
+{
+  auto fields = splitOnEmptyRows(input);
+
+  int64_t result{};
+
+  for (auto& field : fields) {
+    auto [x, y] = fiendReflectionsWithSmudges(field);
+    result += x + (100 * y);
+  }
 
   return result;
 }
@@ -112,16 +178,13 @@ TEST_CASE("Task1 and 2 example input")
   };
 
   REQUIRE(task1(input) == 405);
-
-
-
-
+  REQUIRE(task2(input) == 400);
 }
 
 TEST_CASE("Tasks")
 {
   auto input = readLines("../../day13/input.txt");
   //
-  fmt::println("Day13 Task1 result: {}\n", task1(input));
-  // fmt::println("Day11 Task2 result: {}\n", task2(input));
+  fmt::println("Day13 Task1 result: {}", task1(input));
+  fmt::println("Day13 Task2 result: {}", task2(input));
 }
